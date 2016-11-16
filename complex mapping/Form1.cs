@@ -68,7 +68,8 @@ namespace complex_mapping
             piece1.Add(Complex.Conj(nextPiece));
 
             Complex rotation = new Complex(Math.Cos(Math.PI / 10), Math.Sin(Math.PI  / 10));
-            Matrix rotation2 = rotation * Matrix.Eye(2);
+            Complex[,] temp = { { rotation, Complex.Zero }, { Complex.Zero, Complex.One } };
+            Matrix rotation2 = new Matrix(temp);
             transformations.Add(rotation2);
 
             for(int i = 0; i < 5; i++)
@@ -169,15 +170,23 @@ namespace complex_mapping
                 new SolidBrush(Color.FromArgb(0,102,255)),
                 new SolidBrush(Color.FromArgb(204,0,255)),
                 new SolidBrush(Color.FromArgb(255,0,0))};
+            Complex[,] transform = { {Complex.One, -location }, {-Complex.Conj(location) * w, w } };
+            Matrix CamTransform = new Matrix(transform);
             for (int i = 0; i < parts.Count; i++)
             {
                 PointF[] shape = new PointF[4];
-                for (int j = 0; j < 4; j++)
+                for (int k = 0; k < transformations.Count; k++)
                 {
-                    Complex first = Complex.phi(parts[i][j], Complex.One, -location, -Complex.Conj(location), Complex.One) / w;
-                    shape[j] = new PointF(
-                    (float)interpolate(first.Re, -1, 1, 0, pictureBox2.Height - 1),
-                    (float)interpolate(first.Im, -1, 1, pictureBox2.Height - 1, 0));
+                    Matrix temp = CamTransform * transformations[k];
+                    for (int j = 0; j < 4; j++)
+                    {
+                        
+                        Complex first = Complex.phi(parts[i][j], temp[1,1], temp[1,2], 
+                                                                 temp[2,1], temp[2,2]);
+                        shape[j] = new PointF(
+                        (float)interpolate(first.Re, -1, 1, 0, pictureBox2.Height - 1),
+                        (float)interpolate(first.Im, -1, 1, pictureBox2.Height - 1, 0));
+                    }
                 }
                 e.Graphics.FillPolygon(colors[i], shape);
             }
